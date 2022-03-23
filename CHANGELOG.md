@@ -8,8 +8,8 @@ and this project will adhere to [Semantic Versioning](http://semver.org/spec/v2.
 
 ## [0.1.0] - 2021-06-03
 
-[0.1.0]: https://github.com/dgraph-io/ristretto/compare/v0.1.0..v0.0.3
-This release contains bug fixes and improvements to Ristretto. It also contains
+[0.1.0]: https://github.com/dgraph-io/zistretto/compare/v0.1.0..v0.0.3
+This release contains bug fixes and improvements to Zistretto. It also contains
 major updates to the z package. The z package contains types such as Tree (B+
 tree), Buffer, Mmap file, etc. All these types are used in Badger and Dgraph to
 improve performance and reduce memory requirements.
@@ -20,12 +20,12 @@ improve performance and reduce memory requirements.
 ### Added
 - Use z.Buffer backing for B+ tree (#268)
 - expose GetTTL function (#270)
-- docs(README): Ristretto is production-ready. (#267)
+- docs(README): Zistretto is production-ready. (#267)
 - Add IterateKV (#265)
 - feat(super-flags): Add GetPath method in superflags (#258)
 - add GetDuration to SuperFlag (#248)
 - add Has, GetFloat64, and GetInt64 to SuperFlag (#247)
-- move SuperFlag to Ristretto (#246)
+- move SuperFlag to Zistretto (#246)
 - add SuperFlagHelp tool to generate flag help text (#251)
 - allow empty defaults in SuperFlag (#254)
 - add mmaped b+ tree (#207)
@@ -75,7 +75,7 @@ improve performance and reduce memory requirements.
 - Fix(buffer): Expose padding by z.Buffer's APIs and fix test (#222)
 - AllocateSlice should Truncate if the file is not big enough (#226)
 - Zero out allocations for structs now that we're reusing Allocators.
-- Fix the ristretto substring
+- Fix the zistretto substring
 - Deal with nil z.AllocatorPool
 - Create an AllocatorPool class.
 - chore(btree): clean NewTree API (#225)
@@ -132,7 +132,7 @@ improve performance and reduce memory requirements.
 
 ## [0.0.3] - 2020-07-06
 
-[0.0.3]: https://github.com/dgraph-io/ristretto/compare/v0.0.2..v0.0.3
+[0.0.3]: https://github.com/dgraph-io/zistretto/compare/v0.0.2..v0.0.3
 
 ### Changed
 
@@ -148,7 +148,7 @@ improve performance and reduce memory requirements.
 
 ## [0.0.2] - 2020-02-24
 
-[0.0.2]: https://github.com/dgraph-io/ristretto/compare/v0.0.1..v0.0.2
+[0.0.2]: https://github.com/dgraph-io/zistretto/compare/v0.0.1..v0.0.2
 
 ### Added
 
@@ -161,11 +161,11 @@ improve performance and reduce memory requirements.
 - Delete item immediately. ([#113][])
 - Remove key from policy after TTL eviction. ([#130][])
 
-[#111]: https://github.com/dgraph-io/ristretto/issues/111
-[#113]: https://github.com/dgraph-io/ristretto/issues/113
-[#119]: https://github.com/dgraph-io/ristretto/issues/119
-[#122]: https://github.com/dgraph-io/ristretto/issues/122
-[#130]: https://github.com/dgraph-io/ristretto/issues/130
+[#111]: https://github.com/dgraph-io/zistretto/issues/111
+[#113]: https://github.com/dgraph-io/zistretto/issues/113
+[#119]: https://github.com/dgraph-io/zistretto/issues/119
+[#122]: https://github.com/dgraph-io/zistretto/issues/122
+[#130]: https://github.com/dgraph-io/zistretto/issues/130
 
 ## 0.0.1
 

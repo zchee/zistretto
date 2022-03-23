@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-// Ristretto is a fast, fixed size, in-memory cache with a dual focus on
-// throughput and hit ratio performance. You can easily add Ristretto to an
+// Zistretto is a fast, fixed size, in-memory cache with a dual focus on
+// throughput and hit ratio performance. You can easily add Zistretto to an
 // existing system and keep the most valuable data where you need it.
-package ristretto
+package zistretto
 
 import (
 	"errors"
@@ -25,7 +25,7 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/dgraph-io/ristretto/z"
+	"github.com/zchee/zistretto/z"
 )
 
 var (

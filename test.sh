@@ -8,9 +8,9 @@ starttest() {
 if [ -z "${TEAMCITY_VERSION}" ]; then
 	# running locally, so start test in a container
 	# TEAMCITY_VERSION=local will avoid recursive calls, when it would be running in container
-	docker run --rm --name ristretto-test -ti \
-  		-v `pwd`:/go/src/github.com/dgraph-io/ristretto \
-  		--workdir /go/src/github.com/dgraph-io/ristretto \
+	docker run --rm --name zistretto-test -ti \
+  		-v `pwd`:/go/src/github.com/dgraph-io/zistretto \
+  		--workdir /go/src/github.com/dgraph-io/zistretto \
 		--env TEAMCITY_VERSION=local \
   		golang:1.16 \
   		sh test.sh

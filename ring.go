@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ristretto
+package zistretto
 
 import (
 	"sync"

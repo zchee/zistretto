@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package ristretto
+package zistretto
 
 import (
 	"math"
 	"sync"
 	"sync/atomic"
 
-	"github.com/dgraph-io/ristretto/z"
+	"github.com/zchee/zistretto/z"
 )
 
 const (

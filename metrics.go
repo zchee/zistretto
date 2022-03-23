@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ristretto
+package zistretto
 
 import (
 	"bytes"
@@ -22,7 +22,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/dgraph-io/ristretto/z"
+	"github.com/zchee/zistretto/z"
 )
 
 type metricType int

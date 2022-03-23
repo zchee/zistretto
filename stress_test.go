@@ -1,4 +1,4 @@
-package ristretto
+package zistretto
 
 import (
 	"container/heap"
@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dgraph-io/ristretto/sim"
+	"github.com/zchee/zistretto/sim"
 	"github.com/stretchr/testify/require"
 )
 
@@ -76,7 +76,7 @@ func TestStressHitRatio(t *testing.T) {
 }
 
 // Clairvoyant is a mock cache providing us with optimal hit ratios to compare
-// with Ristretto's. It looks ahead and evicts the absolute least valuable item,
+// with Zistretto's. It looks ahead and evicts the absolute least valuable item,
 // which we try to approximate in a real cache.
 type Clairvoyant struct {
 	capacity uint64

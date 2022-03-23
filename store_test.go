@@ -1,10 +1,10 @@
-package ristretto
+package zistretto
 
 import (
 	"testing"
 	"time"
 
-	"github.com/dgraph-io/ristretto/z"
+	"github.com/zchee/zistretto/z"
 	"github.com/stretchr/testify/require"
 )
 

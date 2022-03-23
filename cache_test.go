@@ -1,4 +1,4 @@
-package ristretto
+package zistretto
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dgraph-io/ristretto/z"
+	"github.com/zchee/zistretto/z"
 	"github.com/stretchr/testify/require"
 )
 
@@ -811,7 +811,7 @@ func TestBlockOnClear(t *testing.T) {
 	}
 }
 
-// Regression test for bug https://github.com/dgraph-io/ristretto/issues/167
+// Regression test for bug https://github.com/dgraph-io/zistretto/issues/167
 func TestDropUpdates(t *testing.T) {
 	originalSetBugSize := setBufSize
 	defer func() { setBufSize = originalSetBugSize }()
@@ -873,7 +873,7 @@ func TestDropUpdates(t *testing.T) {
 	}
 }
 
-func TestRistrettoCalloc(t *testing.T) {
+func TestZistrettoCalloc(t *testing.T) {
 	maxCacheSize := 1 << 20
 	config := &Config{
 		// Use 5% of cache memory for storing counters.
@@ -913,7 +913,7 @@ func TestRistrettoCalloc(t *testing.T) {
 	require.Zero(t, z.NumAllocBytes())
 }
 
-func TestRistrettoCallocTTL(t *testing.T) {
+func TestZistrettoCallocTTL(t *testing.T) {
 	maxCacheSize := 1 << 20
 	config := &Config{
 		// Use 5% of cache memory for storing counters.

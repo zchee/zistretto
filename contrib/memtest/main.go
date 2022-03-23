@@ -32,7 +32,7 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/dgraph-io/ristretto/z"
+	"github.com/zchee/zistretto/z"
 	"github.com/dustin/go-humanize"
 )
 

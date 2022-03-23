@@ -1,4 +1,4 @@
-package ristretto
+package zistretto
 
 import (
 	"sync"
