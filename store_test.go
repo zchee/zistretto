@@ -1,17 +1,23 @@
+/*
+ * SPDX-FileCopyrightText: © Hypermode Inc. <hello@hypermode.com>
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package zistretto
 
 import (
 	"testing"
 	"time"
 
-	"github.com/zchee/zistretto/z"
 	"github.com/stretchr/testify/require"
+
+	"github.com/zchee/zistretto/z"
 )
 
 func TestStoreSetGet(t *testing.T) {
-	s := newShardedMap(nil)
+	s := newStore[int]()
 	key, conflict := z.KeyToHash(1)
-	i := Item{
+	i := Item[int]{
 		Key:      key,
 		Conflict: conflict,
 		Value:    2,
@@ -19,16 +25,16 @@ func TestStoreSetGet(t *testing.T) {
 	s.Set(&i)
 	val, ok := s.Get(key, conflict)
 	require.True(t, ok)
-	require.Equal(t, 2, val.(int))
+	require.Equal(t, 2, val)
 
 	i.Value = 3
 	s.Set(&i)
 	val, ok = s.Get(key, conflict)
 	require.True(t, ok)
-	require.Equal(t, 3, val.(int))
+	require.Equal(t, 3, val)
 
 	key, conflict = z.KeyToHash(2)
-	i = Item{
+	i = Item[int]{
 		Key:      key,
 		Conflict: conflict,
 		Value:    2,
@@ -36,13 +42,13 @@ func TestStoreSetGet(t *testing.T) {
 	s.Set(&i)
 	val, ok = s.Get(key, conflict)
 	require.True(t, ok)
-	require.Equal(t, 2, val.(int))
+	require.Equal(t, 2, val)
 }
 
 func TestStoreDel(t *testing.T) {
-	s := newShardedMap(nil)
+	s := newStore[int]()
 	key, conflict := z.KeyToHash(1)
-	i := Item{
+	i := Item[int]{
 		Key:      key,
 		Conflict: conflict,
 		Value:    1,
@@ -51,16 +57,16 @@ func TestStoreDel(t *testing.T) {
 	s.Del(key, conflict)
 	val, ok := s.Get(key, conflict)
 	require.False(t, ok)
-	require.Nil(t, val)
+	require.Empty(t, val)
 
 	s.Del(2, 0)
 }
 
 func TestStoreClear(t *testing.T) {
-	s := newShardedMap(nil)
+	s := newStore[uint64]()
 	for i := uint64(0); i < 1000; i++ {
 		key, conflict := z.KeyToHash(i)
-		it := Item{
+		it := Item[uint64]{
 			Key:      key,
 			Conflict: conflict,
 			Value:    i,
@@ -72,14 +78,37 @@ func TestStoreClear(t *testing.T) {
 		key, conflict := z.KeyToHash(i)
 		val, ok := s.Get(key, conflict)
 		require.False(t, ok)
-		require.Nil(t, val)
+		require.Empty(t, val)
 	}
 }
 
-func TestStoreUpdate(t *testing.T) {
-	s := newShardedMap(nil)
+func TestShouldUpdate(t *testing.T) {
+	// Create a should update function where the value only increases.
+	s := newStore[int]()
+	s.SetShouldUpdateFn(func(cur, prev int) bool {
+		return cur > prev
+	})
+
 	key, conflict := z.KeyToHash(1)
-	i := Item{
+	i := Item[int]{
+		Key:      key,
+		Conflict: conflict,
+		Value:    2,
+	}
+	s.Set(&i)
+	i.Value = 1
+	_, ok := s.Update(&i)
+	require.False(t, ok)
+
+	i.Value = 3
+	_, ok = s.Update(&i)
+	require.True(t, ok)
+}
+
+func TestStoreUpdate(t *testing.T) {
+	s := newStore[int]()
+	key, conflict := z.KeyToHash(1)
+	i := Item[int]{
 		Key:      key,
 		Conflict: conflict,
 		Value:    1,
@@ -95,7 +124,7 @@ func TestStoreUpdate(t *testing.T) {
 
 	val, ok = s.Get(key, conflict)
 	require.True(t, ok)
-	require.Equal(t, 2, val.(int))
+	require.Equal(t, 2, val)
 
 	i.Value = 3
 	_, ok = s.Update(&i)
@@ -103,10 +132,10 @@ func TestStoreUpdate(t *testing.T) {
 
 	val, ok = s.Get(key, conflict)
 	require.True(t, ok)
-	require.Equal(t, 3, val.(int))
+	require.Equal(t, 3, val)
 
 	key, conflict = z.KeyToHash(2)
-	i = Item{
+	i = Item[int]{
 		Key:      key,
 		Conflict: conflict,
 		Value:    2,
@@ -115,13 +144,13 @@ func TestStoreUpdate(t *testing.T) {
 	require.False(t, ok)
 	val, ok = s.Get(key, conflict)
 	require.False(t, ok)
-	require.Nil(t, val)
+	require.Empty(t, val)
 }
 
 func TestStoreCollision(t *testing.T) {
-	s := newShardedMap(nil)
+	s := newShardedMap[int]()
 	s.shards[1].Lock()
-	s.shards[1].data[1] = storeItem{
+	s.shards[1].data[1] = storeItem[int]{
 		key:      1,
 		conflict: 0,
 		value:    1,
@@ -129,9 +158,9 @@ func TestStoreCollision(t *testing.T) {
 	s.shards[1].Unlock()
 	val, ok := s.Get(1, 1)
 	require.False(t, ok)
-	require.Nil(t, val)
+	require.Empty(t, val)
 
-	i := Item{
+	i := Item[int]{
 		Key:      1,
 		Conflict: 1,
 		Value:    2,
@@ -139,25 +168,25 @@ func TestStoreCollision(t *testing.T) {
 	s.Set(&i)
 	val, ok = s.Get(1, 0)
 	require.True(t, ok)
-	require.NotEqual(t, 2, val.(int))
+	require.NotEqual(t, 2, val)
 
 	_, ok = s.Update(&i)
 	require.False(t, ok)
 	val, ok = s.Get(1, 0)
 	require.True(t, ok)
-	require.NotEqual(t, 2, val.(int))
+	require.NotEqual(t, 2, val)
 
 	s.Del(1, 1)
 	val, ok = s.Get(1, 0)
 	require.True(t, ok)
-	require.NotNil(t, val)
+	require.NotEmpty(t, val)
 }
 
 func TestStoreExpiration(t *testing.T) {
-	s := newShardedMap(nil)
+	s := newStore[int]()
 	key, conflict := z.KeyToHash(1)
 	expiration := time.Now().Add(time.Second)
-	i := Item{
+	i := Item[int]{
 		Key:        key,
 		Conflict:   conflict,
 		Value:      1,
@@ -166,7 +195,7 @@ func TestStoreExpiration(t *testing.T) {
 	s.Set(&i)
 	val, ok := s.Get(key, conflict)
 	require.True(t, ok)
-	require.Equal(t, 1, val.(int))
+	require.Equal(t, 1, val)
 
 	ttl := s.Expiration(key)
 	require.Equal(t, expiration, ttl)
@@ -184,9 +213,9 @@ func TestStoreExpiration(t *testing.T) {
 }
 
 func BenchmarkStoreGet(b *testing.B) {
-	s := newShardedMap(nil)
+	s := newStore[int]()
 	key, conflict := z.KeyToHash(1)
-	i := Item{
+	i := Item[int]{
 		Key:      key,
 		Conflict: conflict,
 		Value:    1,
@@ -201,12 +230,12 @@ func BenchmarkStoreGet(b *testing.B) {
 }
 
 func BenchmarkStoreSet(b *testing.B) {
-	s := newShardedMap(nil)
+	s := newStore[int]()
 	key, conflict := z.KeyToHash(1)
 	b.SetBytes(1)
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			i := Item{
+			i := Item[int]{
 				Key:      key,
 				Conflict: conflict,
 				Value:    1,
@@ -217,9 +246,9 @@ func BenchmarkStoreSet(b *testing.B) {
 }
 
 func BenchmarkStoreUpdate(b *testing.B) {
-	s := newShardedMap(nil)
+	s := newStore[int]()
 	key, conflict := z.KeyToHash(1)
-	i := Item{
+	i := Item[int]{
 		Key:      key,
 		Conflict: conflict,
 		Value:    1,
@@ -228,7 +257,7 @@ func BenchmarkStoreUpdate(b *testing.B) {
 	b.SetBytes(1)
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			s.Update(&Item{
+			s.Update(&Item[int]{
 				Key:      key,
 				Conflict: conflict,
 				Value:    2,

@@ -24,5 +24,5 @@ func check() {
 }
 
 func init() {
-	log.Infof("USING JEMALLOC")
+	log.Println("USING JEMALLOC")
 }

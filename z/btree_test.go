@@ -1,24 +1,12 @@
 /*
- * Copyright 2020 Dgraph Labs, Inc. and Contributors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-FileCopyrightText: © Hypermode Inc. <hello@hypermode.com>
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 package z
 
 import (
 	"fmt"
-	"io/ioutil"
 	"math"
 	"math/rand"
 	"os"
@@ -27,9 +15,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/zchee/zistretto/z/simd"
 	"github.com/dustin/go-humanize"
 	"github.com/stretchr/testify/require"
+
+	"github.com/zchee/zistretto/z/simd"
 )
 
 var tmp int
@@ -61,7 +50,7 @@ func TestTree(t *testing.T) {
 }
 
 func TestTreePersistent(t *testing.T) {
-	dir, err := ioutil.TempDir("", "")
+	dir, err := os.MkdirTemp("", "")
 	require.NoError(t, err)
 	defer os.RemoveAll(dir)
 	path := filepath.Join(dir, "tree.buf")
@@ -369,7 +358,7 @@ func BenchmarkWrite(b *testing.B) {
 
 // goos: linux
 // goarch: amd64
-// pkg: github.com/dgraph-io/zistretto/z
+// pkg: github.com/dgraph-io/ristretto/z
 // BenchmarkRead/map-4         	10845322	       109 ns/op
 // BenchmarkRead/btree-4       	 2744283	       430 ns/op
 // Cumulative for 10 runs.
@@ -439,7 +428,7 @@ func BenchmarkSearch(b *testing.B) {
 
 	jumpBy := []int{8, 16, 32, 64, 128, 196, 255}
 	for _, sz := range jumpBy {
-		f, err := ioutil.TempFile(".", "tree")
+		f, err := os.CreateTemp(".", "tree")
 		require.NoError(b, err)
 
 		mf, err := OpenMmapFileUsing(f, pageSize, true)

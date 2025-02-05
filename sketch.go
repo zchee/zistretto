@@ -1,27 +1,8 @@
 /*
- * Copyright 2019 Dgraph Labs, Inc. and Contributors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-FileCopyrightText: © Hypermode Inc. <hello@hypermode.com>
+ * SPDX-License-Identifier: Apache-2.0
  */
 
-// This package includes multiple probabalistic data structures needed for
-// admission/eviction metadata. Most are Counting Bloom Filter variations, but
-// a caching-specific feature that is also required is a "freshness" mechanism,
-// which basically serves as a "lifetime" process. This freshness mechanism
-// was described in the original TinyLFU paper [1], but other mechanisms may
-// be better suited for certain data distributions.
-//
-// [1]: https://arxiv.org/abs/1512.00727
 package zistretto
 
 import (
@@ -53,7 +34,8 @@ func newCmSketch(numCounters int64) *cmSketch {
 	numCounters = next2Power(numCounters)
 	sketch := &cmSketch{mask: uint64(numCounters - 1)}
 	// Initialize rows of counters and seeds.
-	source := rand.New(rand.NewSource(time.Now().UnixNano()))
+	// Cryptographic precision not needed
+	source := rand.New(rand.NewSource(time.Now().UnixNano())) //nolint:gosec
 	for i := 0; i < cmDepth; i++ {
 		sketch.seed[i] = source.Uint64()
 		sketch.rows[i] = newCmRow(numCounters)
@@ -102,7 +84,7 @@ func newCmRow(numCounters int64) cmRow {
 }
 
 func (r cmRow) get(n uint64) byte {
-	return byte(r[n/2]>>((n&1)*4)) & 0x0f
+	return (r[n/2] >> ((n & 1) * 4)) & 0x0f
 }
 
 func (r cmRow) increment(n uint64) {

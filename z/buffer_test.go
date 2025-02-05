@@ -1,17 +1,6 @@
 /*
- * Copyright 2020 Dgraph Labs, Inc. and Contributors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-FileCopyrightText: © Hypermode Inc. <hello@hypermode.com>
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 package z
@@ -24,13 +13,11 @@ import (
 	"math/rand"
 	"sort"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 )
 
 func TestBuffer(t *testing.T) {
-	rand.Seed(time.Now().Unix())
 	const capacity = 512
 	buffers := newTestBuffers(t, capacity)
 
@@ -61,7 +48,6 @@ func TestBuffer(t *testing.T) {
 }
 
 func TestBufferWrite(t *testing.T) {
-	rand.Seed(time.Now().Unix())
 	const capacity = 32
 	buffers := newTestBuffers(t, capacity)
 
@@ -109,12 +95,12 @@ func TestBufferAutoMmap(t *testing.T) {
 
 	var count int
 	var last []byte
-	buf.SliceIterate(func(slice []byte) error {
+	require.NoError(t, buf.SliceIterate(func(slice []byte) error {
 		require.True(t, bytes.Compare(slice, last) >= 0)
 		last = append(last[:0], slice...)
 		count++
 		return nil
-	})
+	}))
 	require.Equal(t, N, count)
 }
 
@@ -134,7 +120,7 @@ func TestBufferSimpleSort(t *testing.T) {
 			})
 			var last uint32
 			var i int
-			buf.SliceIterate(func(slice []byte) error {
+			require.NoError(t, buf.SliceIterate(func(slice []byte) error {
 				num := binary.BigEndian.Uint32(slice)
 				if num < last {
 					fmt.Printf("num: %d idx: %d last: %d\n", num, i, last)
@@ -144,7 +130,7 @@ func TestBufferSimpleSort(t *testing.T) {
 				last = num
 				// fmt.Printf("Got number: %d\n", num)
 				return nil
-			})
+			}))
 		})
 	}
 }
@@ -174,7 +160,7 @@ func TestBufferSlice(t *testing.T) {
 
 			compare := func() {
 				i := 0
-				buf.SliceIterate(func(slice []byte) error {
+				require.NoError(t, buf.SliceIterate(func(slice []byte) error {
 					// All the slices returned by the buffer should be equal to what we
 					// inserted earlier.
 					if !bytes.Equal(exp[i], slice) {
@@ -184,7 +170,7 @@ func TestBufferSlice(t *testing.T) {
 					require.Equal(t, exp[i], slice)
 					i++
 					return nil
-				})
+				}))
 				require.Equal(t, len(exp), i)
 			}
 			compare() // same order as inserted.
@@ -219,15 +205,16 @@ func TestBufferSort(t *testing.T) {
 			}
 
 			test := func(start, end int) {
-				start = buf.StartOffset() + 12*start
-				end = buf.StartOffset() + 12*end
+				start = buf.StartOffset() + 16*start
+				end = buf.StartOffset() + 16*end
 				buf.SortSliceBetween(start, end, func(ls, rs []byte) bool {
 					lhs := binary.BigEndian.Uint64(ls)
 					rhs := binary.BigEndian.Uint64(rs)
 					return lhs < rhs
 				})
 
-				slice, next := []byte{}, start
+				next := start
+				var slice []byte
 				var last uint64
 				var count int
 				for next >= 0 && next < end {
@@ -237,7 +224,7 @@ func TestBufferSort(t *testing.T) {
 					last = uid
 					count++
 				}
-				require.Equal(t, (end-start)/12, count)
+				require.Equal(t, (end-start)/16, count)
 			}
 			for i := 10; i <= N; i += 10 {
 				test(i-10, i)

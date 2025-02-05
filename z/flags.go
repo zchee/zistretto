@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: © Hypermode Inc. <hello@hypermode.com>
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package z
 
 import (
@@ -162,7 +167,7 @@ func (sf *SuperFlag) MergeWithDefault(flag string) (*SuperFlag, error) {
 		}
 	}
 	if numKeys != 0 {
-		return nil, fmt.Errorf("superflag: found invalid options in flag: %s.\nvalid options: %v", sf, flag)
+		return nil, fmt.Errorf("superflag: found invalid options: %s.\nvalid options: %v", sf, flag)
 	}
 	for k, v := range src {
 		if _, ok := sf.m[k]; !ok {
@@ -184,7 +189,7 @@ func (sf *SuperFlag) GetDuration(opt string) time.Duration {
 	}
 	if strings.Contains(val, "d") {
 		val = strings.Replace(val, "d", "", 1)
-		days, err := strconv.ParseUint(val, 0, 64)
+		days, err := strconv.ParseInt(val, 0, 64)
 		if err != nil {
 			return time.Duration(0)
 		}

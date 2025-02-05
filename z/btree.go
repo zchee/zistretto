@@ -1,17 +1,6 @@
 /*
- * Copyright 2020 Dgraph Labs, Inc. and Contributors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-FileCopyrightText: © Hypermode Inc. <hello@hypermode.com>
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 package z
@@ -30,6 +19,7 @@ import (
 var (
 	pageSize = os.Getpagesize()
 	maxKeys  = (pageSize / 16) - 1
+	//nolint:unused
 	oneThird = int(float64(maxKeys) / 3)
 )
 
@@ -480,6 +470,8 @@ func (t *Tree) split(pid uint64) node {
 // shareWithSiblingXXX is unused for now. The idea is to move some keys to
 // sibling when a node is full. But, I don't see any special benefits in our
 // access pattern. It doesn't result in better occupancy ratios.
+//
+//nolint:unused
 func (t *Tree) shareWithSiblingXXX(n node, idx int) bool {
 	if idx == 0 {
 		return false

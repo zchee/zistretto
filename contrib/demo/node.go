@@ -3,10 +3,10 @@ package main
 import (
 	"fmt"
 	"runtime"
-	"unsafe"
+
+	"github.com/dustin/go-humanize"
 
 	"github.com/zchee/zistretto/z"
-	"github.com/dustin/go-humanize"
 )
 
 type node struct {
@@ -14,7 +14,6 @@ type node struct {
 	next *node
 }
 
-var nodeSz = int(unsafe.Sizeof(node{}))
 var alloc *z.Allocator
 
 func printNode(n *node) {

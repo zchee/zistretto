@@ -1,221 +1,188 @@
-# Zistretto
-[![Go Doc](https://img.shields.io/badge/godoc-reference-blue.svg)](http://godoc.org/github.com/dgraph-io/zistretto)
-[![Go Report Card](https://img.shields.io/badge/go%20report-A%2B-brightgreen)](https://goreportcard.com/report/github.com/dgraph-io/zistretto)
-[![Coverage](https://gocover.io/_badge/github.com/dgraph-io/zistretto)](https://gocover.io/github.com/dgraph-io/zistretto)
-![Tests](https://github.com/dgraph-io/zistretto/workflows/tests/badge.svg)
+# Ristretto
 
-Zistretto is a fast, concurrent cache library built with a focus on performance and correctness.
+[![Go Doc](https://img.shields.io/badge/godoc-reference-blue.svg)](https://pkg.go.dev/github.com/dgraph-io/ristretto/v2)
+[![ci-ristretto-tests](https://github.com/hypermodeinc/ristretto/actions/workflows/ci-ristretto-tests.yml/badge.svg)](https://github.com/hypermodeinc/ristretto/actions/workflows/ci-ristretto-tests.yml)
+[![ci-ristretto-lint](https://github.com/hypermodeinc/ristretto/actions/workflows/ci-ristretto-lint.yml/badge.svg)](https://github.com/hypermodeinc/ristretto/actions/workflows/ci-ristretto-lint.yml)
+[![Coverage Status](https://coveralls.io/repos/github/hypermodeinc/ristretto/badge.svg?branch=main)](https://coveralls.io/github/hypermodeinc/ristretto?branch=main)
+[![Go Report Card](https://img.shields.io/badge/go%20report-A%2B-brightgreen)](https://goreportcard.com/report/github.com/hypermodeinc/ristretto)
 
-The motivation to build Zistretto comes from the need for a contention-free
-cache in [Dgraph][].
+Ristretto is a fast, concurrent cache library built with a focus on performance and correctness.
 
-**Use [Discuss Issues](https://discuss.dgraph.io/tags/c/issues/35/zistretto/40) for reporting issues about this repository.**
+The motivation to build Ristretto comes from the need for a contention-free cache in [Dgraph][].
 
-[Dgraph]: https://github.com/dgraph-io/dgraph
+[Dgraph]: https://github.com/hypermodeinc/dgraph
 
 ## Features
 
-* **High Hit Ratios** - with our unique admission/eviction policy pairing, Zistretto's performance is best in class.
-	* **Eviction: SampledLFU** - on par with exact LRU and better performance on Search and Database traces.
-	* **Admission: TinyLFU** - extra performance with little memory overhead (12 bits per counter).
-* **Fast Throughput** - we use a variety of techniques for managing contention and the result is excellent throughput.
-* **Cost-Based Eviction** - any large new item deemed valuable can evict multiple smaller items (cost could be anything).
-* **Fully Concurrent** - you can use as many goroutines as you want with little throughput degradation. 
-* **Metrics** - optional performance metrics for throughput, hit ratios, and other stats.
-* **Simple API** - just figure out your ideal `Config` values and you're off and running.
+- **High Hit Ratios** - with our unique admission/eviction policy pairing, Ristretto's performance
+  is best in class.
+  - **Eviction: SampledLFU** - on par with exact LRU and better performance on Search and Database
+    traces.
+  - **Admission: TinyLFU** - extra performance with little memory overhead (12 bits per counter).
+- **Fast Throughput** - we use a variety of techniques for managing contention and the result is
+  excellent throughput.
+- **Cost-Based Eviction** - any large new item deemed valuable can evict multiple smaller items
+  (cost could be anything).
+- **Fully Concurrent** - you can use as many goroutines as you want with little throughput
+  degradation.
+- **Metrics** - optional performance metrics for throughput, hit ratios, and other stats.
+- **Simple API** - just figure out your ideal `Config` values and you're off and running.
 
 ## Status
 
-Zistretto is production-ready. See [Projects using Zistretto](#projects-using-zistretto).
+Ristretto is production-ready. See [Projects using Ristretto](#projects-using-ristretto).
 
-## Table of Contents
+## Getting Started
 
-* [Usage](#Usage)
-	* [Example](#Example)
-	* [Config](#Config)
-		* [NumCounters](#Config)
-		* [MaxCost](#Config)
-		* [BufferItems](#Config)
-		* [Metrics](#Config)
-		* [OnEvict](#Config)
-		* [KeyToHash](#Config)
-        * [Cost](#Config)
-* [Benchmarks](#Benchmarks)
-	* [Hit Ratios](#Hit-Ratios)
-		* [Search](#Search)
-		* [Database](#Database)
-		* [Looping](#Looping)
-		* [CODASYL](#CODASYL)
-	* [Throughput](#Throughput)
-		* [Mixed](#Mixed)
-		* [Read](#Read)
-		* [Write](#Write)
-* [Projects using Zistretto](#projects-using-zistretto)
-* [FAQ](#FAQ)
+### Installing
+
+To start using Ristretto, install Go 1.21 or above. Ristretto needs go modules. From your project,
+run the following command
+
+```sh
+go get github.com/dgraph-io/ristretto/v2
+```
+
+This will retrieve the library.
+
+#### Choosing a version
+
+Following these rules:
+
+- v1.x.x is the first version used in most programs with Ristretto dependencies.
+- v2.x.x is the new version with support for generics, for which it has a slightly different
+  interface. This version is designed to solve compatibility problems of programs using the old
+  version of Ristretto. If you start writing a new program, it is recommended to use this version.
 
 ## Usage
 
-### Example
-
 ```go
+package main
+
+import (
+  "fmt"
+
+  "github.com/dgraph-io/ristretto/v2"
+)
+
 func main() {
-	cache, err := zistretto.NewCache(&zistretto.Config{
-		NumCounters: 1e7,     // number of keys to track frequency of (10M).
-		MaxCost:     1 << 30, // maximum cost of cache (1GB).
-		BufferItems: 64,      // number of keys per Get buffer.
-	})
-	if err != nil {
-		panic(err)
-	}
+  cache, err := ristretto.NewCache(&ristretto.Config[string, string]{
+    NumCounters: 1e7,     // number of keys to track frequency of (10M).
+    MaxCost:     1 << 30, // maximum cost of cache (1GB).
+    BufferItems: 64,      // number of keys per Get buffer.
+  })
+  if err != nil {
+    panic(err)
+  }
+  defer cache.Close()
 
-	// set a value with a cost of 1
-	cache.Set("key", "value", 1)
-	
-	// wait for value to pass through buffers
-	cache.Wait()
+  // set a value with a cost of 1
+  cache.Set("key", "value", 1)
 
-	value, found := cache.Get("key")
-	if !found {
-		panic("missing value")
-	}
-	fmt.Println(value)
-	cache.Del("key")
+  // wait for value to pass through buffers
+  cache.Wait()
+
+  // get value from cache
+  value, found := cache.Get("key")
+  if !found {
+    panic("missing value")
+  }
+  fmt.Println(value)
+
+  // del value from cache
+  cache.Del("key")
 }
 ```
 
-### Config
-
-The `Config` struct is passed to `NewCache` when creating Zistretto instances (see the example above). 
-
-**NumCounters** `int64`
-
-NumCounters is the number of 4-bit access counters to keep for admission and eviction. We've seen good performance in setting this to 10x the number of items you expect to keep in the cache when full. 
-
-For example, if you expect each item to have a cost of 1 and MaxCost is 100, set NumCounters to 1,000. Or, if you use variable cost values but expect the cache to hold around 10,000 items when full, set NumCounters to 100,000. The important thing is the *number of unique items* in the full cache, not necessarily the MaxCost value. 
-
-**MaxCost** `int64`
-
-MaxCost is how eviction decisions are made. For example, if MaxCost is 100 and a new item with a cost of 1 increases total cache cost to 101, 1 item will be evicted. 
-
-MaxCost can also be used to denote the max size in bytes. For example, if MaxCost is 1,000,000 (1MB) and the cache is full with 1,000 1KB items, a new item (that's accepted) would cause 5 1KB items to be evicted. 
-
-MaxCost could be anything as long as it matches how you're using the cost values when calling Set. 
-
-**BufferItems** `int64`
-
-BufferItems is the size of the Get buffers. The best value we've found for this is 64. 
-
-If for some reason you see Get performance decreasing with lots of contention (you shouldn't), try increasing this value in increments of 64. This is a fine-tuning mechanism and you probably won't have to touch this.
-
-**Metrics** `bool`
-
-Metrics is true when you want real-time logging of a variety of stats. The reason this is a Config flag is because there's a 10% throughput performance overhead. 
-
-**OnEvict** `func(hashes [2]uint64, value interface{}, cost int64)`
-
-OnEvict is called for every eviction.
-
-**KeyToHash** `func(key interface{}) [2]uint64`
-
-KeyToHash is the hashing algorithm used for every key. If this is nil, Zistretto has a variety of [defaults depending on the underlying interface type](https://github.com/dgraph-io/zistretto/blob/master/z/z.go#L19-L41).
-
-Note that if you want 128bit hashes you should use the full `[2]uint64`,
-otherwise just fill the `uint64` at the `0` position and it will behave like
-any 64bit hash.
-
-**Cost** `func(value interface{}) int64`
-
-Cost is an optional function you can pass to the Config in order to evaluate
-item cost at runtime, and only for the Set calls that aren't dropped (this is
-useful if calculating item cost is particularly expensive and you don't want to
-waste time on items that will be dropped anyways).
-
-To signal to Zistretto that you'd like to use this Cost function:
-
-1. Set the Cost field to a non-nil function.
-2. When calling Set for new items or item updates, use a `cost` of 0.
-
 ## Benchmarks
 
-The benchmarks can be found in https://github.com/dgraph-io/benchmarks/tree/master/cachebench/zistretto.
+The benchmarks can be found in
+https://github.com/dgraph-io/benchmarks/tree/master/cachebench/ristretto.
 
-### Hit Ratios
+### Hit Ratios for Search
 
-#### Search
-
-This trace is described as "disk read accesses initiated by a large commercial
-search engine in response to various web search requests."
-
-<p align="center">
-	<img src="https://raw.githubusercontent.com/dgraph-io/zistretto/master/benchmarks/Hit%20Ratios%20-%20Search%20(ARC-S3).svg">
-</p>
-
-#### Database
-
-This trace is described as "a database server running at a commercial site
-running an ERP application on top of a commercial database."
+This trace is described as "disk read accesses initiated by a large commercial search engine in
+response to various web search requests."
 
 <p align="center">
-	<img src="https://raw.githubusercontent.com/dgraph-io/zistretto/master/benchmarks/Hit%20Ratios%20-%20Database%20(ARC-DS1).svg">
+  <img src="https://raw.githubusercontent.com/hypermodeinc/ristretto/main/benchmarks/Hit%20Ratios%20-%20Search%20(ARC-S3).svg"
+  alt="Graph showing hit ratios comparison for search workload">
 </p>
 
-#### Looping
+### Hit Ratio for Database
+
+This trace is described as "a database server running at a commercial site running an ERP
+application on top of a commercial database."
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/hypermodeinc/ristretto/main/benchmarks/Hit%20Ratios%20-%20Database%20(ARC-DS1).svg"
+  alt="Graph showing hit ratios comparison for database workload">
+</p>
+
+### Hit Ratio for Looping
 
 This trace demonstrates a looping access pattern.
 
 <p align="center">
-	<img src="https://raw.githubusercontent.com/dgraph-io/zistretto/master/benchmarks/Hit%20Ratios%20-%20Glimpse%20(LIRS-GLI).svg">
+  <img src="https://raw.githubusercontent.com/hypermodeinc/ristretto/main/benchmarks/Hit%20Ratios%20-%20Glimpse%20(LIRS-GLI).svg"
+  alt="Graph showing hit ratios comparison for looping access pattern">
 </p>
 
-#### CODASYL
+### Hit Ratio for CODASYL
 
-This trace is described as "references to a CODASYL database for a one hour
-period."
+This trace is described as "references to a CODASYL database for a one hour period."
 
 <p align="center">
-	<img src="https://raw.githubusercontent.com/dgraph-io/zistretto/master/benchmarks/Hit%20Ratios%20-%20CODASYL%20(ARC-OLTP).svg">
+  <img src="https://raw.githubusercontent.com/hypermodeinc/ristretto/main/benchmarks/Hit%20Ratios%20-%20CODASYL%20(ARC-OLTP).svg"
+  alt="Graph showing hit ratios comparison for CODASYL workload">
 </p>
 
-### Throughput
-
-All throughput benchmarks were ran on an Intel Core i7-8700K (3.7GHz) with 16gb
-of RAM.
-
-#### Mixed
+### Throughput for Mixed Workload
 
 <p align="center">
-	<img src="https://raw.githubusercontent.com/dgraph-io/zistretto/master/benchmarks/Throughput%20-%20Mixed.svg">
+  <img src="https://raw.githubusercontent.com/hypermodeinc/ristretto/main/benchmarks/Throughput%20-%20Mixed.svg"
+  alt="Graph showing throughput comparison for mixed workload">
 </p>
 
-#### Read
+### Throughput ffor Read Workload
 
 <p align="center">
-	<img src="https://raw.githubusercontent.com/dgraph-io/zistretto/master/benchmarks/Throughput%20-%20Read%20(Zipfian).svg">
+  <img src="https://raw.githubusercontent.com/hypermodeinc/ristretto/main/benchmarks/Throughput%20-%20Read%20(Zipfian).svg"
+  alt="Graph showing throughput comparison for read workload">
 </p>
 
-#### Write
+### Through for Write Workload
 
 <p align="center">
-	<img src="https://raw.githubusercontent.com/dgraph-io/zistretto/master/benchmarks/Throughput%20-%20Write%20(Zipfian).svg">
+  <img src="https://raw.githubusercontent.com/hypermodeinc/ristretto/main/benchmarks/Throughput%20-%20Write%20(Zipfian).svg"
+  alt="Graph showing throughput comparison for write workload">
 </p>
 
-## Projects Using Zistretto
+## Projects Using Ristretto
 
-Below is a list of known projects that use Zistretto:
+Below is a list of known projects that use Ristretto:
 
-- [Badger](https://github.com/dgraph-io/badger) - Embeddable key-value DB in Go
-- [Dgraph](https://github.com/dgraph-io/dgraph) - Horizontally scalable and distributed GraphQL database with a graph backend
-- [Vitess](https://github.com/vitessio/vitess) - Database clustering system for horizontal scaling of MySQL
-- [SpiceDB](https://github.com/authzed/spicedb) - Horizontally scalable permissions database
+- [Badger](https://github.com/hypermodeinc/badger) - Embeddable key-value DB in Go
+- [Dgraph](https://github.com/hypermodeinc/dgraph) - Horizontally scalable and distributed GraphQL
+  database with a graph backend
 
 ## FAQ
 
 ### How are you achieving this performance? What shortcuts are you taking?
 
-We go into detail in the [Zistretto blog post](https://blog.dgraph.io/post/introducing-zistretto-high-perf-go-cache/), but in short: our throughput performance can be attributed to a mix of batching and eventual consistency. Our hit ratio performance is mostly due to an excellent [admission policy](https://arxiv.org/abs/1512.00727) and SampledLFU eviction policy.
+We go into detail in the
+[Ristretto blog post](https://blog.dgraph.io/post/introducing-ristretto-high-perf-go-cache/), but in
+short: our throughput performance can be attributed to a mix of batching and eventual consistency.
+Our hit ratio performance is mostly due to an excellent
+[admission policy](https://arxiv.org/abs/1512.00727) and SampledLFU eviction policy.
 
-As for "shortcuts," the only thing Zistretto does that could be construed as one is dropping some Set calls. That means a Set call for a new item (updates are guaranteed) isn't guaranteed to make it into the cache. The new item could be dropped at two points: when passing through the Set buffer or when passing through the admission policy. However, this doesn't affect hit ratios much at all as we expect the most popular items to be Set multiple times and eventually make it in the cache. 
+As for "shortcuts," the only thing Ristretto does that could be construed as one is dropping some
+Set calls. That means a Set call for a new item (updates are guaranteed) isn't guaranteed to make it
+into the cache. The new item could be dropped at two points: when passing through the Set buffer or
+when passing through the admission policy. However, this doesn't affect hit ratios much at all as we
+expect the most popular items to be Set multiple times and eventually make it in the cache.
 
-### Is Zistretto distributed?
+### Is Ristretto distributed?
 
-No, it's just like any other Go library that you can import into your project and use in a single process. 
+No, it's just like any other Go library that you can import into your project and use in a single
+process.
